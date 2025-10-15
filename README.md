@@ -17,11 +17,9 @@ Built with **React.js**, **Express**, **MongoDB Atlas**, **TailwindCSS**, **Clou
 
 ---
 
-## 📺 Demo
+## 📺 Live
 
-[![Demo Video](https://img.youtube.com/vi/your-demo-id/maxresdefault.jpg)](https://www.youtube.com/watch?v=your-demo-id)
-
----
+🎯 [**🚀 Live Demo**](https://visual-product-matcher-frontend-one.vercel.app/)
 
 ## 🗂️ Project Structure
 
