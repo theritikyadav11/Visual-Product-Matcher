@@ -8,6 +8,7 @@ import { validateImageUrl } from "../utils/validation.js";
 
 const router = express.Router();
 
+// search by image
 router.post(
   "/search/image",
   upload.single("image"),
@@ -15,10 +16,13 @@ router.post(
   async (req, res, next) => {
     try {
       const queryImageUrl = req.imageUrl;
+      const k = Math.max(1, Math.min(10, Number(req.body?.k) || 10));
       const t0 = Date.now();
+
       const embedding = await getImageEmbedding(queryImageUrl);
       const products = await Product.find({ embedding: { $exists: true } });
-      const topResults = searchTopK(embedding, products, 10);
+      const topResults = searchTopK(embedding, products, k);
+
       await SearchLog.create({
         queryType: "image",
         queryImageUrl,
@@ -26,7 +30,9 @@ router.post(
         similarityScores: topResults.map((r) => r.score),
         latencyMs: Date.now() - t0,
       });
+
       res.json({
+        k,
         results: topResults.map(({ product, score }) => ({
           ...product.toObject(),
           score,
@@ -38,14 +44,18 @@ router.post(
   }
 );
 
+// Search by Image URL
 router.post("/search/url", async (req, res, next) => {
   try {
-    const { imageUrl } = req.body;
+    const { imageUrl, k: kRaw } = req.body;
     validateImageUrl(imageUrl);
+    const k = Math.max(1, Math.min(10, Number(kRaw) || 10));
     const t0 = Date.now();
+
     const embedding = await getImageEmbedding(imageUrl);
     const products = await Product.find({ embedding: { $exists: true } });
-    const topResults = searchTopK(embedding, products, 10);
+    const topResults = searchTopK(embedding, products, k);
+
     await SearchLog.create({
       queryType: "url",
       queryImageUrl: imageUrl,
@@ -53,7 +63,9 @@ router.post("/search/url", async (req, res, next) => {
       similarityScores: topResults.map((r) => r.score),
       latencyMs: Date.now() - t0,
     });
+
     res.json({
+      k,
       results: topResults.map(({ product, score }) => ({
         ...product.toObject(),
         score,

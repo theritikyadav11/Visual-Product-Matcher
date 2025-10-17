@@ -5,15 +5,14 @@ import { searchByUrl } from "../lib/api";
 export default function UrlBox({ disabled, setLoading, onResults, onError }) {
   const [url, setUrl] = useState("");
   const [showPreview, setShowPreview] = useState(false);
+  const [k, setK] = useState(10);
 
-  const validateImageUrl = (u) => {
-    return /^https?:\/\/.+\.(jpe?g|png|webp|gif)$/i.test(u);
-  };
+  const validateImageUrl = (u) =>
+    /^https?:\/\/.+\.(jpe?g|png|webp|gif)$/i.test(u);
 
   const handleUrlChange = (e) => {
     const newUrl = e.target.value;
     setUrl(newUrl);
-    // Show preview if URL looks valid
     if (validateImageUrl(newUrl)) {
       setShowPreview(true);
     } else {
@@ -35,7 +34,8 @@ export default function UrlBox({ disabled, setLoading, onResults, onError }) {
     setLoading(true);
     onError && onError("");
     try {
-      const result = await searchByUrl(url);
+      const topK = Math.max(1, Math.min(10, Number(k) || 10));
+      const result = await searchByUrl(url, topK);
       onResults && onResults(result.results || []);
     } catch (err) {
       onError && onError(err.message || "URL search failed.");
@@ -50,6 +50,7 @@ export default function UrlBox({ disabled, setLoading, onResults, onError }) {
         Or Enter Image URL
       </label>
       <form onSubmit={handleSubmit} className="flex flex-col">
+        {/* URL input field */}
         <input
           type="url"
           value={url}
@@ -60,6 +61,7 @@ export default function UrlBox({ disabled, setLoading, onResults, onError }) {
           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
         />
 
+        {/* Image preview */}
         {url && showPreview && (
           <div className="mt-4 relative">
             <img
@@ -79,6 +81,24 @@ export default function UrlBox({ disabled, setLoading, onResults, onError }) {
           </div>
         )}
 
+        {/* Top-K slider */}
+        <div className="mt-4">
+          <label className="text-sm font-medium text-gray-700">
+            Results count: {k}
+          </label>
+          <input
+            type="range"
+            min={1}
+            max={10}
+            step={1}
+            value={k}
+            onChange={(e) => setK(e.target.value)}
+            disabled={disabled}
+            className="w-full"
+          />
+        </div>
+
+        {/* Submit button */}
         <button
           type="submit"
           disabled={disabled || !url}

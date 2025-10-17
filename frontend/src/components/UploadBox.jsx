@@ -11,6 +11,7 @@ export default function UploadBox({
   const fileInput = useRef(null);
   const [file, setFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [k, setK] = useState(10);
 
   const handleFileChange = (e) => {
     const f = e.target.files[0];
@@ -36,7 +37,8 @@ export default function UploadBox({
     setLoading(true);
     onError && onError("");
     try {
-      const result = await searchByImage(file);
+      const topK = Math.max(1, Math.min(10, Number(k) || 10)); // Ensure 1–10 range
+      const result = await searchByImage(file, topK);
       onResults && onResults(result.results || []);
     } catch (err) {
       onError && onError(err.message || "Upload/search failed.");
@@ -60,6 +62,7 @@ export default function UploadBox({
           className="hidden"
           id="file-upload-input"
         />
+
         <label
           htmlFor="file-upload-input"
           className={`flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-purple-300 rounded-xl ${
@@ -95,6 +98,22 @@ export default function UploadBox({
             </>
           )}
         </label>
+
+        <div className="mt-4">
+          <label className="text-sm font-medium text-gray-700">
+            Results count: {k}
+          </label>
+          <input
+            type="range"
+            min={1}
+            max={10}
+            step={1}
+            value={k}
+            onChange={(e) => setK(e.target.value)}
+            disabled={disabled}
+            className="w-full"
+          />
+        </div>
 
         <button
           type="submit"
